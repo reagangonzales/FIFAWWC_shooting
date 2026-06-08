@@ -8,6 +8,7 @@ library(zoo)
 
 wwc_shots <- read_csv("https://raw.githubusercontent.com/36-SURE/2026/main/data/wwc_shots.csv")
 View(wwc_shots)
+glimpse(wwc_shots)
 
 #Questions
 
