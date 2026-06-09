@@ -22,6 +22,8 @@ glimpse(wwc_shots)
 #Does having defenders in the cone change the goalkeepers position
 #Distance to cone + defenders in cone + angle of shot = shot outcome?
 
+#Time in possesion? Player position?
+
 ggplot(wwc_shots, aes(x=shot.outcome.name))+
   geom_bar()
 length(unique(wwc_shots$player.name)) #386 players
@@ -140,3 +142,13 @@ common_play_patterns|>
   geom_density_ridges(scale=1.5)+
   theme(legend.position = "none")+
   scale_fill_viridis_d()
+
+ggplot(wwc_shots, aes(x=distance.ToD1.360, y=position.name))+
+  geom_boxplot()
+
+#number of shots by position
+wwc_shots|>
+  group_by(position.name)|>
+  count(position.name)|>
+  arrange(desc(n))|>
+  print(n=23)
