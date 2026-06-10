@@ -8,6 +8,7 @@ library(zoo)
 library(ggridges)
 library(tableone)
 library(ggrepel)
+library(ggdendro)
 
 #Import the data
 wwc_shots <- read_csv("https://raw.githubusercontent.com/36-SURE/2026/main/data/wwc_shots.csv")
@@ -43,7 +44,6 @@ wwc_shots<- wwc_shots|>
                                   wwc_shots$possession_team.name != "Sweden Women's" ~ FALSE,
                                 TRUE ~ TRUE
                                 ))
-
 
 
 ###Helpful Subsets###
@@ -191,6 +191,7 @@ print(complex.play_patterntable)
 
 ###########################################################################
 ### k-means Clustering ###
+###Not finished
 std_wwc_shots_clusterfeatures<- wwc_shots|>
   select(DistToGoal, AngleToGoal, distance.ToD1.360, DefendersInCone,
          density.incone, TimeInPoss, avevelocity, DistSGK)|>
@@ -202,5 +203,29 @@ kmeans_many_features <- std_wwc_shots_clusterfeatures |>
 
 
 ############################################################################
-#Position on field by shot type
-names(wwc_shots)
+#Hierarchical clustering
+std_wwc_shots_features <-wwc_shots|>
+  select(DistToGoal, AngleToGoal, distance.ToD1.360,
+         density.incone)|>
+  scale()
+
+dist_mult_features <- std_wwc_shots_features |> 
+  dist(method = "euclidean") 
+
+wwc_hc_complete <- dist_mult_features |> 
+  hclust(method = "complete")
+
+#dendrogram
+wwc_hc_complete |> 
+  ggdendrogram(labels = FALSE, 
+               leaf_labels = FALSE,
+               theme_dendro = FALSE) +
+  labs(y = "Dissimilarity between clusters") +
+  theme(axis.text.x = element_blank(), 
+        axis.title.x = element_blank(),
+        panel.grid = element_blank())
+
+table("Cluster" = cutree(wwc_hc_complete, k = 3),
+      "Shot Technique" = wwc_shots$shot.technique.name )
+##almost everything is being grouped into one cluster?!
+

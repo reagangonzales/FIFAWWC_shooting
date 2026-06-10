@@ -52,9 +52,9 @@ common_play_pattern.data|>
              color = median_density.incone,
              label = play_pattern.name))+
   geom_point()+
-  scale_size(range= c(5, 20), name="Total")+
+  scale_size(range= c(5, 20), name="Total Shot Attempts")+
   theme_bw()+
-  scale_y_continuous(limits = c(0, .18))+
+  scale_y_continuous(limits = c(0, .18), labels = scales::label_percent())+
   scale_x_continuous(limits = c(0,22))+
   geom_text_repel(size=3.5, nudge_y = -0.0125, 
                   segment.color = NA, family = "mono")+
@@ -66,5 +66,7 @@ common_play_pattern.data|>
   scale_color_gradient(low="#69000C",
                        high="#FF999E")+
   theme(plot.title = element_text(hjust = 0.5, 
-                                  face = "bold"),
+                                  face = "bold",
+                                  size = 24),
+        plot.caption = element_text(size=10),
         text = element_text(family = "mono"))
