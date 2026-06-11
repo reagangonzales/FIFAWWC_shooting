@@ -9,7 +9,12 @@ library(ggrepel)
 #Import the data
 wwc_shots <- read_csv("https://raw.githubusercontent.com/36-SURE/2026/main/data/wwc_shots.csv")
 
-#4 most common play patterns
+#Adding a goal binary variable
+wwc_shots <- wwc_shots|>
+  mutate(goal = case_when(shot.outcome.name == "Goal" ~ "Goal",
+                          shot.outcome.name != "Goal" ~ "No Goal"))
+
+#4 most common play patterns subset
 common_play_patterns <- wwc_shots |>
   filter(play_pattern.name == "From Corner" |
            play_pattern.name == "From Free Kick" |
@@ -28,7 +33,7 @@ medianTimeInPoss <- common_play_patterns|>
   summarize(median.TimeInPoss = median(TimeInPoss))
 
 #Goal percentage for each type of play pattern
-play_patterns_goals <-common_play_patterns|>
+play_patterns_goals <- common_play_patterns|>
   group_by(play_pattern.name)|>
   count(goal)|>
   pivot_wider(id_cols = play_pattern.name, names_from = goal, values_from = n)|>
@@ -69,4 +74,6 @@ common_play_pattern.data|>
                                   face = "bold",
                                   size = 24),
         plot.caption = element_text(size=10),
-        text = element_text(family = "mono"))
+        text = element_text(family = "mono"),
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14))
