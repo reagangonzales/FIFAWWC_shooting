@@ -77,3 +77,27 @@ common_play_pattern.data|>
         text = element_text(family = "mono"),
         axis.title.x = element_text(size=14),
         axis.title.y = element_text(size=14))
+
+###
+####Bubble Plot - no title for slideshow####
+common_play_pattern.data|>
+  ggplot(aes(x=median.TimeInPoss, y=goal.pct, size=Total,
+             color = median_density.incone,
+             label = play_pattern.name))+
+  geom_point()+
+  scale_size(range= c(5, 20), name="Total Shot Attempts")+
+  theme_bw()+
+  scale_y_continuous(limits = c(0, .18), labels = scales::label_percent())+
+  scale_x_continuous(limits = c(0,22))+
+  geom_text_repel(size=4.5, nudge_y = -0.0125, 
+                  segment.color = NA)+
+  labs(x="Median Time In Possession",
+       y= "Goal Percentage",
+       caption = "Data courtesy of StatsBomb",
+       color = "Median Density in Cone")+
+  scale_color_gradient(low="#69000C",
+                       high="#FF999E")+
+  theme(text=element_text(size=14),
+        plot.caption = element_text(size=10),
+        axis.title.x = element_text(size=20),
+        axis.title.y = element_text(size=20))
