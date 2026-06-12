@@ -30,16 +30,15 @@ wwc_shots2 <- wwc_shots |>
                                           possession_team.name == "France Women's" ~ "France",
                                           possession_team.name == "United States Women's" ~
                                             "United States"))
+
 # add image file column
 wwc_shots2$image_file <- paste0("logo_images/", wwc_shots2$possession_team.name, ".png")
 # create visualization
 wwc_shots2 |>
-  mutate(goal_outcome = case_when(shot.outcome.name %in% 
-                                    c("Blocked","Off T", "Post", "Saved", "Saved Off Target",
-                                      "Saved to Post","Wayward", "Goal") ~ "Shots")) |>
+  mutate(goal_outcome = "Shots") |>
   filter(possession_team.name %in% c("Spain", "Australia", "England", "France", 
                                      "United States")) |>
-  group_by(possession_team.name, image_file) |>   # include image_file here
+  group_by(possession_team.name, image_file) |> 
   count(goal_outcome) |>
   arrange(desc(n)) |>
   ggplot(aes(x = reorder(possession_team.name, -n), y = n)) +
@@ -54,9 +53,10 @@ wwc_shots2 |>
     "United States" = "#002868"   # navy
   )) +
   coord_cartesian(ylim = c(0,160)) + # adjust y scale to fit Spain's logo
-  labs(x = "", y = "Number of Shots", 
-       title = "Teams With The Most Shots", 
+  labs(x = "", y = "Number of Shots",  
        caption = "Data courtesy of StatsBomb")
+
+
 
 ## Gaussian Clustering ##
 # filter top 15 goal scores
@@ -71,10 +71,11 @@ wwc_top15_shots <- wwc_shots |>
   filter(player.name %in% wwc_top15$player.name)
 
 # Clustering
+# Assuming velocity is in  24 yd/s
 library(mclust)
 wwc_mclust <- wwc_top15_shots |>
   select(DistToGoal, avevelocity) |>  
-  #filter(avevelocity <= 100) |>
+  filter(avevelocity <= 30) |> # realistically average women's shot at most around 24/25 yd/s
   Mclust()
 summary(wwc_mclust)
 
@@ -84,38 +85,29 @@ library(gt)
 library(patchwork)
 gt(tidy(wwc_mclust))
 
+# Plot
+library(NatParksPalettes)
 plot <- wwc_mclust|>
   augment() |>
   ggplot(aes(x=DistToGoal,y=avevelocity, 
              color = .class, 
              size = .uncertainty)) +
-  geom_point(alpha = 0.6) +
+  geom_point(alpha = 0.7) +
   labs(x = "Distance to Goal", y = "Average Velocity", size = "Uncertainty", color = "Cluster",
-       title = "Top 15 Scorers' Shot Attempts by Distance and Velocity",
        caption = "Data courtesy  of StatsBomb") +
-  theme(text = element_text(family = "mono"), plot.title = element_text(hjust = 0.5, face = "bold", 
-                                                                        size = 20),
-        caption = element_text(hjust = 0.5),
+  scale_color_manual(values = natparks.pals("Torres", 3)) +
+  theme_bw() +
+  theme(plot.caption = element_text(hjust = 1, vjust = 2),
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14)) 
 
-table <- tidy(wwc_mclust) |>
+# Table
+tablet <- tidy(wwc_mclust) |>
   as_tibble() |>
   rename(`Component` = component, `Size` = size, `Proportion` = proportion,
          `Avg Distance To Goal` = mean.DistToGoal, `Avg Velocity` = mean.avevelocity) |>
   gt() |>
   cols_align(align = "center",
              columns = everything()) |>
-  opt_table_font(font = list(google_font(name = "mono"))) |>
-  fmt_number(columns = c(Proportion, `Avg Distance To Goal`, `Avg Velocity`), decimals = 2)
-
-centered_table <- plot_spacer() +
-  wrap_elements(full = table) +
-  plot_layout(widths = c(1, 1, 2))
-
-centered_table
-
-combined_visualization <- plot / table +
-  plot_layout(heights = c(8, 1))
-
-combined_visualization
+  fmt_number(columns = c(Proportion, `Avg Distance To Goal`, `Avg Velocity`), decimals = 2) |>
+  opt_stylize(style = 4, color = "blue")
