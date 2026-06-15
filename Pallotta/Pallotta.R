@@ -9,6 +9,23 @@ library(patchwork)
 # load the data
 wwc_shots <- read_csv("https://raw.githubusercontent.com/36-SURE/2026/main/data/wwc_shots.csv")
 
+# create a gt table for data overview
+data_overview <- wwc_shots |>
+  filter(shot.outcome.name %in% c("Goal", "Blocked", "Saved")) |>
+  mutate(under_pressure = case_when(under_pressure == TRUE ~ "TRUE",
+                                    is.na(under_pressure) ~ "FALSE")) |>
+  select(Player = player.name, `Shot Outcome` = shot.outcome.name, `Play Pattern` = play_pattern.name,
+         `Under Pressure` = under_pressure, `Distance to Goal (Yards)` = DistToGoal) |>
+  head(5) |>
+  gt(groupname_col = "") |>
+  fmt_number(columns = `Distance to Goal (Yards)`, decimals = 2) |>
+  cols_align(align = "center",
+             columns = everything()) |>
+  tab_footnote(footnote = "Source: StatsBomb") |>
+  opt_stylize(style = 4, color = "blue")
+
+data_overview
+
 # clean the pressure variable and create a goal outcome variable 
 wwc_shots <- wwc_shots |>
   mutate(under_pressure = case_when(under_pressure == TRUE ~ "Pressured",
@@ -40,8 +57,7 @@ plot <- fifa_field +
     fun = mean, color = "black") +
   facet_wrap(~under_pressure, nrow = 1) +
   scale_fill_gradient(low = "midnightblue", high = "goldenrod", labels = scales::percent) +
-  labs(title = "Goal Percentage by Defensive Pressure",
-       caption = "Data courtesy of StatsBomb",
+  labs(caption = "Data courtesy of StatsBomb",
        fill = "Goal %") +
   theme_classic() +
   theme(axis.title.x = element_blank(),
@@ -52,15 +68,13 @@ plot <- fifa_field +
         axis.text.y  = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank(),
-        strip.text = element_text(family = "mono", size = 16),
+        strip.text = element_text(size = 16),
         strip.background = element_blank(),
-        plot.title = element_text(family = "mono", hjust = 0.5, face = "bold", size = 24),
-        plot.caption = element_text(family = "mono", hjust = 0.5, size = 10),
+        plot.caption = element_text(hjust = 0.5, size = 10),
         legend.position = c(0.005, .935),
         legend.justification = c("left", "top"),
         legend.box.just = "left",
-        legend.margin = margin(5, 5, 5, 5),
-        text = element_text(family = "mono"))
+        legend.margin = margin(5, 5, 5, 5))
 
 # create a gt table for the total counts by the pressure variable
 shot_breakdown <- wwc_shots |> 
@@ -71,8 +85,7 @@ shot_breakdown <- wwc_shots |>
   gt(groupname_col = "") |>
   cols_label(under_pressure = "") |>
   cols_align(align = "center",
-             columns = everything()) |>
-  opt_table_font(font = list(google_font(name = "mono")))
+             columns = everything())
 
 # center the gt table and combine the elements into one viz
 centered_table <- plot_spacer() +
